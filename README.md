@@ -4,8 +4,8 @@ Byte inputs are to be written in HEX code.
 
 <h2>Command line usage:</h2>
 BinaryFilePatcher.exe somefile.dll "42 4F 4F 42 53" "42 55 54 54 53" false
-
-Argument 1: Target file.
-Argument 2: HEX pattern to look for.
-Argument 3: HEX pattern to replace with.
-Argument 4 (optional): If set to true, all matching instances of the pattern will be replaced, instead of just the first.
+<br/><br/>
+Argument 1: Target file.<br/>
+Argument 2: HEX pattern to look for.<br/>
+Argument 3: HEX pattern to replace with.<br/>
+Argument 4 (optional): If set to true, all matching instances of the pattern will be replaced, instead of just the first.<br/>
