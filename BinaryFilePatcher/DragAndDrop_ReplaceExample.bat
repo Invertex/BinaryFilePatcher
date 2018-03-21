@@ -1,0 +1,1 @@
+"%~dp0bin\Release\BinaryFilePatcher.exe" %1 "42 4F 4F 42 53" "42 55 54 54 53" false
