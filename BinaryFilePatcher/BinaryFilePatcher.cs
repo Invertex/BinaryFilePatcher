@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Security;
+using System.Security.Permissions;
 using Invertex.BinaryFilePatcher.Extensions;
 
 namespace Invertex.BinaryFilePatcher
@@ -18,27 +20,38 @@ namespace Invertex.BinaryFilePatcher
                 Console.WriteLine("");
                 Console.WriteLine("Binary File Patcher starting...");
                 Console.WriteLine("");
- 
+
                 if(File.Exists(path))
                 {
-                    byte[] fileBytes = File.ReadAllBytes(path);
-                    byte[] matchBytes = matchString.HexStringToBytes();
-                    byte[] replaceBytes = replaceString.HexStringToBytes();
+                    var permissionSet = new PermissionSet(PermissionState.None);
+                    var writePermission = new FileIOPermission(FileIOPermissionAccess.Write, path);
+                    permissionSet.AddPermission(writePermission);
 
-                    if (matchBytes != null && matchBytes.Length > 0
-                        && replaceBytes != null && replaceBytes.Length == matchBytes.Length
-                        && fileBytes != null && fileBytes.Length >= matchBytes.Length)
+                    if (permissionSet.IsSubsetOf(AppDomain.CurrentDomain.PermissionSet))
                     {
-                        int replaced = ReplaceBytes(fileBytes, matchBytes, replaceBytes, replaceAllInstances);
-                        if(replaced > 0)
+                        byte[] fileBytes = File.ReadAllBytes(path);
+                        byte[] matchBytes = matchString.HexStringToBytes();
+                        byte[] replaceBytes = replaceString.HexStringToBytes();
+
+                        if (matchBytes != null && matchBytes.Length > 0
+                            && replaceBytes != null && replaceBytes.Length == matchBytes.Length
+                            && fileBytes != null && fileBytes.Length >= matchBytes.Length)
                         {
-                            File.WriteAllBytes(path, fileBytes);
+                            int replaced = ReplaceBytes(fileBytes, matchBytes, replaceBytes, replaceAllInstances);
+                            if (replaced > 0)
+                            {
+                                File.WriteAllBytes(path, fileBytes);
+                            }
+                            Console.WriteLine("Found and replaced " + replaced + " instances of bytes: " + matchBytes.BytesToString("-"));
                         }
-                        Console.WriteLine("Found and replaced " + replaced + " instances of bytes: " + matchBytes.BytesToString("-"));
+                        else
+                        {
+                            Console.WriteLine("Patcher failed.");
+                        }
                     }
                     else
                     {
-                        Console.WriteLine("Patcher failed.");
+                        Console.WriteLine("Patcher lacks rights.");
                     }
                 }
             }
