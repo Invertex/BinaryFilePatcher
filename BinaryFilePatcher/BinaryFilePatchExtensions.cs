@@ -20,7 +20,7 @@ namespace Invertex.BinaryFilePatcher.Extensions
         {
             try
             {
-                hex = hex.Replace(" ", string.Empty).Replace("0x", string.Empty).ToUpper();
+                hex = hex.CleanHexString();
                 if (hex.Length % 2 == 1)
                 {
                     Console.WriteLine("Hex string does not have even number of characters: " + hex);
@@ -31,7 +31,7 @@ namespace Invertex.BinaryFilePatcher.Extensions
 
                 for (int i = 0; i < hex.Length >> 1; ++i)
                 {
-                    arr[i] = (byte)(( (hex[i << 1]).GetHexVal() << 4) + ((hex[(i << 1) + 1]).GetHexVal()));
+                    arr[i] = (byte)(((hex[i << 1]).GetHexVal() << 4) + ((hex[(i << 1) + 1]).GetHexVal()));
                 }
                 return arr;
             }
@@ -48,5 +48,28 @@ namespace Invertex.BinaryFilePatcher.Extensions
             int val = (int)hex;
             return val - (val < 58 ? 48 : 55);
         }
+
+
+        public static readonly string[] hexSeparators = { " ", "0x", "x", ":", "-" };
+
+        public static string CleanHexString(this string hexString)
+        {
+            foreach(string separator in hexSeparators)
+            {
+                hexString = hexString.Replace(separator, string.Empty);
+            }
+            return hexString.ToUpper();
+        }
+
+        public static string FormatHexString(this string hexString, string placeBetweenEachHex)
+        {
+            string cleanedHex = hexString.CleanHexString();
+            for(int i = cleanedHex.Length - 2; i > 1; i-=2)
+            {
+                cleanedHex = cleanedHex.Insert(i, placeBetweenEachHex);
+            }
+            return cleanedHex;
+        }
     }
+
 }

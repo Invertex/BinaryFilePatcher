@@ -8,8 +8,10 @@ namespace Invertex.BinaryFilePatcher
 {
     class BinaryFilePatcher
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
+            int exitCode = (int)ExitCodes.Success;
+
             if(args.Length >= 3)
             {
                 string path = args[0];
@@ -37,28 +39,47 @@ namespace Invertex.BinaryFilePatcher
                             && replaceBytes != null && replaceBytes.Length == matchBytes.Length
                             && fileBytes != null && fileBytes.Length >= matchBytes.Length)
                         {
-                            int replaced = ReplaceBytes(fileBytes, matchBytes, replaceBytes, replaceAllInstances);
-                            if (replaced > 0)
+                            exitCode = ReplaceBytes(ref fileBytes, matchBytes, replaceBytes, replaceAllInstances);
+                            if (exitCode > 0)
                             {
                                 File.WriteAllBytes(path, fileBytes);
                             }
-                            Console.WriteLine("Found and replaced " + replaced + " instances of bytes: " + matchBytes.BytesToString("-"));
+                            Console.WriteLine("Found and replaced " + exitCode + " instances of bytes: " + matchString.FormatHexString("-"));
                         }
                         else
                         {
-                            Console.WriteLine("Patcher failed.");
+                            Console.WriteLine("Patcher failed. Likely a mismatch of length between Match and Replace bytes.");
+                            exitCode = (int)ExitCodes.MatchAndReplaceLengthMismatch;
                         }
                     }
                     else
                     {
-                        Console.WriteLine("Patcher lacks rights.");
+                        Console.WriteLine("Patcher lacks rights to access file: " + path);
+                        Console.WriteLine("Must run this console as Administrator or move target file to folder that doesn't require Administrator rights to modify.");
+                        exitCode = (int)ExitCodes.AdministrativeRightsRequired;
                     }
+                }
+                else
+                {
+                    Console.WriteLine("Couldn't find file: " + path);
+                    exitCode = (int)ExitCodes.TargetFileNotFound;
                 }
             }
             Console.ReadLine();
+            return exitCode;
         }
 
-        public static int ReplaceBytes(byte[] inBytes, byte[] matchBytes, byte[] replaceBytes, bool replaceAllInstances = false)
+        [Flags]
+        enum ExitCodes : int
+        {
+            Success = 0, //0 and greater is success, with higher numbers being how many replacements
+            NotEnoughArguments = -1,
+            TargetFileNotFound = -2,
+            AdministrativeRightsRequired = -4,
+            MatchAndReplaceLengthMismatch = -8
+        }
+
+        public static int ReplaceBytes(ref byte[] inBytes, byte[] matchBytes, byte[] replaceBytes, bool replaceAllInstances = false)
         {
             int matchLength = matchBytes.Length;
             int curMatch = 0;
@@ -83,8 +104,8 @@ namespace Invertex.BinaryFilePatcher
                         }
                     }
                 }
-                else
-                {
+                else if(curMatch > 0)
+                { //If we failed after already matching some, we should make sure current isn't the start of a new match series before moving on
                     curMatch = (inBytes[i] == matchBytes[0]) ? 1 : 0;
                 }
             }
