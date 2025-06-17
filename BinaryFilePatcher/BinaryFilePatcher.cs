@@ -14,7 +14,7 @@ namespace Invertex.BinaryFilePatcher
 
             if(args.Length >= 3)
             {
-                string path = args[0];
+                string path = Path.GetFullPath(args[0]);
                 string matchString = args[1];
                 string replaceString = args[2];
                 bool replaceAllInstances = (args.Length >= 4 && string.Equals(args[3], "true", StringComparison.OrdinalIgnoreCase));
@@ -65,7 +65,8 @@ namespace Invertex.BinaryFilePatcher
                     exitCode = (int)ExitCodes.TargetFileNotFound;
                 }
             }
-            Console.ReadLine();
+            else { exitCode = (int)ExitCodes.NotEnoughArguments; }
+
             return exitCode;
         }
 
